@@ -1,69 +1,69 @@
 <!doctype html>
 <html lang="es">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
-<title>Control Realtime</title>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
+<title>Control móvil</title>
 <style>
-body{margin:0;min-height:100vh;display:grid;place-items:center;background:#08111d;color:#eef6ff;font-family:Arial,sans-serif;padding:20px}
-.card{width:min(100%,380px);padding:22px;border:1px solid #29445f;border-radius:24px;background:#0d1b2a}
-h1{margin:0 0 8px}
-#status{color:#9fb3c8;font-size:14px;margin-bottom:16px}
-.room{padding:10px 12px;border:1px solid #21374c;border-radius:12px;margin-bottom:18px;background:#0a1724}
-.dpad{display:grid;grid-template-columns:repeat(3,88px);grid-template-rows:repeat(3,88px);gap:8px;justify-content:center}
-button{border:1px solid #2b4c67;border-radius:18px;background:#12304a;color:white;font-size:30px;font-weight:bold;touch-action:manipulation}
-button:active{transform:scale(.95);background:#194d72}
-.up{grid-column:2;grid-row:1}.left{grid-column:1;grid-row:2}.reset{grid-column:2;grid-row:2;font-size:11px}.right{grid-column:3;grid-row:2}.down{grid-column:2;grid-row:3}
-#info{text-align:center;color:#9fb3c8;font-size:14px;margin-top:18px;min-height:20px}
+:root{color-scheme:dark;--bg:#07111f;--panel:#0d1b2a;--line:#223b53;--text:#eef6ff;--muted:#8ea6bd;--accent:#28c2ff;--ok:#38d996}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}body{margin:0;min-height:100vh;padding:20px;display:grid;place-items:center;font-family:Arial,sans-serif;background:radial-gradient(circle at top,#10263e 0,var(--bg) 50%);color:var(--text);user-select:none}
+.card{width:min(100%,430px);border:1px solid var(--line);background:rgba(13,27,42,.96);border-radius:26px;padding:22px}.head{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:18px}.badge{display:inline-flex;align-items:center;gap:7px;color:var(--muted);font-size:.82rem}.dot{width:9px;height:9px;border-radius:50%;background:#78899a}.online .dot{background:var(--ok);box-shadow:0 0 12px var(--ok)}
+.room,.sessionInfo{padding:10px 12px;border:1px solid var(--line);border-radius:12px;background:#091725;margin-bottom:16px}.label,.room small{display:block;color:var(--muted);font-size:.78rem;margin-bottom:4px}.hidden{display:none}
+form{display:grid;gap:12px}input{width:100%;min-height:50px;padding:12px 14px;border-radius:12px;border:1px solid #2a4864;background:#081625;color:var(--text);font-size:16px}.primary{min-height:50px;border:0;border-radius:12px;background:var(--accent);color:#041420;font-weight:800;font-size:1rem}.primary:disabled{opacity:.4}.msg{min-height:22px;color:var(--muted);font-size:.9rem;line-height:1.45}
+.timerWrap{text-align:center;margin:8px 0 18px}.timerLabel{color:var(--muted);font-size:.78rem;text-transform:uppercase}.timer{font-size:3rem;font-weight:900;font-variant-numeric:tabular-nums;margin-top:4px}
+.dpad{display:grid;grid-template-columns:repeat(3,88px);grid-template-rows:repeat(3,88px);gap:9px;justify-content:center;touch-action:manipulation}.dpad button{border:1px solid #2c4b66;border-radius:20px;background:#11283c;color:var(--text);font-size:2rem;font-weight:800;min-width:44px;min-height:44px;touch-action:manipulation}.dpad button:active:not(:disabled){transform:scale(.94);background:#174566}.dpad button:disabled{opacity:.32}.up{grid-column:2;grid-row:1}.left{grid-column:1;grid-row:2}.reset{grid-column:2;grid-row:2;font-size:.72rem!important}.right{grid-column:3;grid-row:2}.down{grid-column:2;grid-row:3}
+.cooldown{text-align:center;padding:12px 0}.cooldown h2{margin:0 0 8px}.cooldownTimer{font-size:3.2rem;font-weight:900;font-variant-numeric:tabular-nums;margin:12px 0}.cooldown p{color:var(--muted);line-height:1.5}
+@media(max-width:350px){.dpad{grid-template-columns:repeat(3,76px);grid-template-rows:repeat(3,76px)}}
 </style>
 </head>
 <body>
 <main class="card">
-  <h1>Control móvil</h1>
-  <div id="status">Conectando...</div>
-  <div class="room"><strong>Sala:</strong> <span id="room"></span></div>
-  <div class="dpad">
-    <button class="up" data-dir="up">↑</button>
-    <button class="left" data-dir="left">←</button>
-    <button class="reset" data-dir="reset">CENTRO</button>
-    <button class="right" data-dir="right">→</button>
-    <button class="down" data-dir="down">↓</button>
-  </div>
-  <div id="info">Esperando conexión...</div>
+<div class="head"><h1>Control móvil</h1><div id="status" class="badge"><span class="dot"></span><span>Conectando…</span></div></div>
+<div class="room"><small>Sala</small><strong id="roomLabel">—</strong></div>
+
+<section id="loginScreen">
+<form id="idForm">
+<div><label class="label" for="studentId">Ingresa tu ID</label><input id="studentId" inputmode="numeric" autocomplete="off" maxlength="30" placeholder="Ej. 23886" required></div>
+<button id="startButton" class="primary" type="submit" disabled>Iniciar control</button>
+<div id="loginMessage" class="msg">Esperando conexión con Supabase…</div>
+</form>
+</section>
+
+<section id="controlScreen" class="hidden">
+<div class="timerWrap"><div class="timerLabel">Tiempo de control</div><div id="playTimer" class="timer">01:00</div></div>
+<div class="dpad">
+<button class="up move" data-direction="up" type="button">↑</button>
+<button class="left move" data-direction="left" type="button">←</button>
+<button class="reset move" data-direction="reset" type="button">CENTRO</button>
+<button class="right move" data-direction="right" type="button">→</button>
+<button class="down move" data-direction="down" type="button">↓</button>
+</div>
+<div class="sessionInfo">ID registrado: <strong id="activeStudent">—</strong><br><span id="sendInfo">Control activo.</span></div>
+</section>
+
+<section id="cooldownScreen" class="hidden">
+<div class="cooldown"><h2>Sesión finalizada</h2><p>Este dispositivo podrá iniciar otra sesión al terminar la espera.</p><div id="cooldownTimer" class="cooldownTimer">03:00</div><p id="cooldownText">Bloqueo temporal activo.</p></div>
+</section>
 </main>
 
 <script type="module">
-import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm";
-import { SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, DEFAULT_ROOM } from "./config.js";
-
-const params=new URLSearchParams(location.search);
-const room=params.get("room")||DEFAULT_ROOM;
-document.getElementById("room").textContent=room;
-
-const statusEl=document.getElementById("status");
-const info=document.getElementById("info");
-const buttons=[...document.querySelectorAll("button")];
-
+import{createClient}from"https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm";
+import{SUPABASE_URL,SUPABASE_PUBLISHABLE_KEY,DEFAULT_ROOM}from"./config.js";
+const p=new URLSearchParams(location.search),room=(p.get("room")||DEFAULT_ROOM).trim()||DEFAULT_ROOM,$=id=>document.getElementById(id);
+$("roomLabel").textContent=room;
+const status=$("status"),login=$("loginScreen"),control=$("controlScreen"),cooldown=$("cooldownScreen"),form=$("idForm"),input=$("studentId"),start=$("startButton"),msg=$("loginMessage"),playTimer=$("playTimer"),activeStudent=$("activeStudent"),sendInfo=$("sendInfo"),cooldownTimer=$("cooldownTimer"),cooldownText=$("cooldownText"),buttons=[...document.querySelectorAll(".move")];
+function deviceId(){const k="isnd_game_device_id";let id=localStorage.getItem(k);if(!id){id=crypto.randomUUID();localStorage.setItem(k,id)}return id}
+const dev=deviceId();let session=null,student=null,endAt=0,coolAt=0,playInt=null,coolInt=null,ready=false;
+function show(name){login.classList.toggle("hidden",name!=="login");control.classList.toggle("hidden",name!=="control");cooldown.classList.toggle("hidden",name!=="cooldown")}
+function fmt(s){s=Math.max(0,Math.ceil(s));return String(Math.floor(s/60)).padStart(2,"0")+":"+String(s%60).padStart(2,"0")}
+function disable(v){buttons.forEach(b=>b.disabled=v)}
 const supabase=createClient(SUPABASE_URL,SUPABASE_PUBLISHABLE_KEY);
-const channel=supabase.channel("game:"+room,{config:{broadcast:{ack:true}}});
-
-buttons.forEach(btn=>{
-  btn.addEventListener("pointerdown",async e=>{
-    e.preventDefault();
-    const direction=btn.dataset.dir;
-    const result=await channel.send({
-      type:"broadcast",
-      event:"move",
-      payload:{direction}
-    });
-    info.textContent = result==="ok" ? "Enviado: "+direction : "Error al enviar";
-  });
-});
-
-channel.subscribe((status)=>{
-  statusEl.textContent = status==="SUBSCRIBED" ? "● Conectado" : status;
-  info.textContent = status==="SUBSCRIBED" ? "Listo. Usa las flechas." : "Esperando conexión...";
-});
+const ch=supabase.channel("game:"+room,{config:{broadcast:{ack:true}}});
+async function send(event,payload){return ch.send({type:"broadcast",event,payload})}
+function cooldownStart(){show("cooldown");disable(true);if(coolInt)clearInterval(coolInt);const t=()=>{const r=(coolAt-Date.now())/1000;cooldownTimer.textContent=fmt(r);if(r<=0){clearInterval(coolInt);coolInt=null;cooldownText.textContent="Ya puedes iniciar una nueva sesión.";setTimeout(()=>{session=null;student=null;endAt=0;coolAt=0;input.value="";msg.textContent="Ingresa tu ID para iniciar.";show("login")},600)}};t();coolInt=setInterval(t,250)}
+async function finish(){if(!session)return;disable(true);if(playInt)clearInterval(playInt);playInt=null;playTimer.textContent="00:00";await send("session_end",{session_id:session,student_id:student,ended_at:new Date().toISOString()});cooldownStart()}
+function begin(data){session=data.session_id;student=data.student_id;endAt=new Date(data.control_ends_at).getTime();coolAt=new Date(data.cooldown_ends_at).getTime();activeStudent.textContent=student;sendInfo.textContent="Control activo.";disable(false);show("control");send("session_start",{session_id:session,student_id:student,control_ends_at:data.control_ends_at,cooldown_ends_at:data.cooldown_ends_at});const t=()=>{const r=(endAt-Date.now())/1000;playTimer.textContent=fmt(r);if(r<=0)finish()};t();playInt=setInterval(t,250)}
+form.addEventListener("submit",async e=>{e.preventDefault();if(!ready)return;const id=input.value.trim();if(!id){msg.textContent="Ingresa un ID.";return}start.disabled=true;input.disabled=true;msg.textContent="Verificando disponibilidad…";const{data,error}=await supabase.rpc("start_game_session",{p_student_id:id,p_device_id:dev,p_room:room});input.disabled=false;if(error){console.error(error);msg.textContent="No se pudo iniciar. Ejecuta setup.sql en Supabase.";start.disabled=false;return}if(!data?.allowed){if(data?.reason==="device_cooldown"&&data?.available_at){coolAt=new Date(data.available_at).getTime();cooldownText.textContent="Este dispositivo ya participó recientemente.";cooldownStart()}else{msg.textContent="No fue posible iniciar.";start.disabled=false}return}begin(data)});
+buttons.forEach(b=>b.addEventListener("pointerdown",async e=>{e.preventDefault();if(!session||Date.now()>=endAt)return;const direction=b.dataset.direction,res=await send("move",{session_id:session,direction,sent_at:Date.now()});sendInfo.textContent=res==="ok"?"Enviado: "+direction:"Error al enviar"}));
+ch.subscribe(s=>{if(s==="SUBSCRIBED"){ready=true;status.classList.add("online");status.lastElementChild.textContent="Conectado";start.disabled=false;msg.textContent="Ingresa tu ID para iniciar."}else{ready=false;status.lastElementChild.textContent=s.replaceAll("_"," ");start.disabled=true}});
 </script>
-</body>
-</html>
+</body></html>
