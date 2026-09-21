@@ -1,0 +1,120 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
+<title>Bug Hunters — Player</title>
+<style>
+:root{color-scheme:dark;--bg:#050b13;--panel:#0b1622;--line:#20384d;--text:#edf7ff;--muted:#839bb0;--cyan:#35c9ff;--green:#45e39a;--red:#ff6577}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent} body{margin:0;min-height:100vh;background:radial-gradient(circle at 50% 0%,rgba(53,201,255,.12),transparent 36%),var(--bg);color:var(--text);font-family:Inter,system-ui,-apple-system,"Segoe UI",sans-serif;padding:18px;user-select:none}
+.app{width:min(100%,520px);margin:auto}.top{display:flex;justify-content:space-between;gap:12px;align-items:center;margin-bottom:16px}.brand{font-weight:950;letter-spacing:.06em}.status{display:flex;gap:7px;align-items:center;color:var(--muted);font-size:.78rem}.dot{width:8px;height:8px;border-radius:50%;background:#687d91}.online .dot{background:var(--green);box-shadow:0 0 10px var(--green)}
+.card{border:1px solid var(--line);background:rgba(11,22,34,.96);border-radius:22px;padding:18px}.hidden{display:none!important}.room{display:flex;justify-content:space-between;gap:10px;align-items:center;margin-bottom:16px;padding:10px 12px;border:1px solid var(--line);border-radius:12px;background:#091520}.room span{color:var(--muted);font-size:.8rem}.room strong{color:var(--cyan);letter-spacing:.1em}
+label{display:block;color:var(--muted);font-size:.82rem;margin-bottom:6px}input{width:100%;min-height:54px;border:1px solid #294861;border-radius:13px;background:#07131e;color:var(--text);padding:12px 14px;font:inherit;font-size:18px;outline:none}input:focus{border-color:var(--cyan)}
+.primary{width:100%;min-height:54px;margin-top:12px;border:0;border-radius:13px;background:var(--cyan);color:#04131d;font:inherit;font-weight:900;font-size:1rem;cursor:pointer}.primary:disabled{opacity:.35;cursor:not-allowed}.msg{margin-top:12px;min-height:22px;color:var(--muted);font-size:.88rem;line-height:1.45}
+.wait{text-align:center;padding:22px 4px}.slot-badge{margin:0 auto 14px;width:76px;height:76px;border-radius:22px;border:1px solid #2c536e;display:grid;place-items:center;background:#0b2534;color:var(--cyan);font-size:1.8rem;font-weight:950}.wait h2{margin:8px 0}.wait p{color:var(--muted);line-height:1.5}
+.countdown{text-align:center;padding:32px 0}.countdown .big{font-size:7rem;font-weight:950;color:var(--cyan);line-height:1}.game-head{display:flex;justify-content:space-between;gap:10px;align-items:flex-start;margin-bottom:12px}.meta{display:flex;gap:6px;flex-wrap:wrap}.pill{border:1px solid var(--line);border-radius:999px;padding:6px 9px;color:var(--muted);font-size:.72rem}.timer{text-align:right;font-size:1.7rem;font-weight:950;font-variant-numeric:tabular-nums}.score-mini{color:var(--cyan);font-size:.75rem;margin-top:2px}
+.code{border:1px solid #24425a;background:#06111b;border-radius:15px;overflow:hidden;margin-bottom:12px}.code-top{padding:8px 11px;border-bottom:1px solid #1e3548;color:var(--muted);font-size:.74rem;display:flex;justify-content:space-between;gap:8px}pre{margin:0;padding:14px;white-space:pre-wrap;overflow-wrap:anywhere;font:600 .86rem/1.5 "Cascadia Code",Consolas,monospace;color:#dcf4ff}.prompt{font-weight:800;line-height:1.4;margin:13px 0}.answers{display:grid;gap:9px}
+.answer{width:100%;min-height:58px;text-align:left;border:1px solid #29445c;border-radius:13px;background:#0d1d2a;color:var(--text);padding:11px 12px;font:inherit;display:flex;align-items:flex-start;gap:10px;cursor:pointer}.answer b{color:var(--cyan);font-size:1rem}.answer span{line-height:1.35}.answer:active:not(:disabled){transform:scale(.985);border-color:var(--cyan)}.answer:disabled{opacity:.6;cursor:default}.answer.selected{border-color:var(--cyan);background:#0c2a39}.answer.correct{border-color:#2d946c;background:#0b2b22;opacity:1}.answer.incorrect{border-color:#9b4150;background:#2c1117;opacity:1}
+.feedback{margin-top:12px;padding:11px 12px;border:1px solid var(--line);border-radius:12px;color:var(--muted);font-size:.86rem;line-height:1.45}.feedback.good{border-color:#2b7d5e;color:#caffea}.feedback.bad{border-color:#7f3742;color:#ffdce1}
+.results{text-align:center}.results h2{font-size:1.7rem;margin:4px 0 8px}.place{font-size:4rem;font-weight:950;color:var(--cyan);line-height:1;margin:18px 0 6px}.final-score{font-size:2rem;font-weight:950}.results p{color:var(--muted)}.leaders{margin-top:18px;text-align:left}.leader{display:grid;grid-template-columns:34px 1fr auto;gap:8px;padding:8px 0;border-bottom:1px solid var(--line);font-size:.84rem}
+@media(max-width:350px){body{padding:10px}.card{padding:14px}pre{font-size:.78rem}}
+</style>
+</head>
+<body>
+<main class="app">
+<div class="top"><div class="brand">&lt;/&gt; BUG HUNTERS</div><div id="connection" class="status"><span class="dot"></span><span>Conectando…</span></div></div>
+<div class="card">
+  <div class="room"><span>Sala</span><strong id="roomCode">BUG01</strong></div>
+
+  <section id="joinScreen">
+    <form id="joinForm">
+      <label for="studentId">Ingresa tu ID</label>
+      <input id="studentId" inputmode="numeric" autocomplete="off" maxlength="30" placeholder="Ej. 23886" required>
+      <button id="joinButton" class="primary" type="submit" disabled>Entrar a la partida</button>
+      <div id="joinMessage" class="msg">Esperando conexión con Supabase…</div>
+    </form>
+  </section>
+
+  <section id="waitingScreen" class="hidden wait">
+    <div id="slotBadge" class="slot-badge">P1</div><h2 id="waitingTitle">Listo para cazar bugs</h2>
+    <p id="waitingText">Esperando al segundo jugador y a que inicie la partida.</p>
+  </section>
+
+  <section id="countdownScreen" class="hidden countdown"><p>La partida inicia en</p><div id="countdownNumber" class="big">3</div></section>
+
+  <section id="gameScreen" class="hidden">
+    <div class="game-head">
+      <div class="meta"><span id="roundPill" class="pill">Ronda 1/8</span><span id="categoryPill" class="pill">SINTAXIS</span><span id="levelPill" class="pill">Nivel 1</span></div>
+      <div><div id="timer" class="timer">12</div><div id="scoreMini" class="score-mini">0 pts</div></div>
+    </div>
+    <div class="code"><div class="code-top"><span id="title">Bug</span><span id="language">JS</span></div><pre id="codeBlock"></pre></div>
+    <div id="prompt" class="prompt"></div><div id="answers" class="answers"></div><div id="feedback" class="feedback">Selecciona una respuesta.</div>
+  </section>
+
+  <section id="resultsScreen" class="hidden results">
+    <h2>Partida terminada</h2><div id="place" class="place">#1</div><div id="finalScore" class="final-score">0 pts</div><p id="finalText">Resultado</p>
+    <button id="playAgain" class="primary" type="button">Jugar otra vez</button>
+    <div class="leaders"><strong>Clasificación global</strong><div id="leaderboard"></div></div>
+  </section>
+</div>
+</main>
+
+<script type="module">
+import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm";
+import { SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, DEFAULT_ROOM, TOTAL_ROUNDS } from "./config.js";
+const $=id=>document.getElementById(id);
+const room=(new URLSearchParams(location.search).get("room")||DEFAULT_ROOM).trim().toUpperCase()||DEFAULT_ROOM;$("roomCode").textContent=room;
+function getDeviceId(){const k="bug_hunters_device_id";let id=localStorage.getItem(k);if(!id){id=crypto.randomUUID();localStorage.setItem(k,id)}return id}
+const myDeviceId=getDeviceId();
+const supabase=createClient(SUPABASE_URL,SUPABASE_PUBLISHABLE_KEY);
+const channel=supabase.channel(`bughunters:${room}`,{config:{broadcast:{ack:true,self:true}}});
+let connected=false,player=null,matchId=null,currentRound=0,answered=false,roundInterval=null,score=0;
+
+function show(name){["joinScreen","waitingScreen","countdownScreen","gameScreen","resultsScreen"].forEach(id=>$(id).classList.toggle("hidden",id!==name))}
+function setConnection(t,on=false){$("connection").className="status"+(on?" online":"");$("connection").querySelector("span:last-child").textContent=t}
+function cat(c){return c==="syntax"?"SINTAXIS":c==="logic"?"LÓGICA":c==="security"?"SEGURIDAD":c}
+function letter(i){return["A","B","C","D"][i-1]||"?"}
+
+async function joinGame(studentId){
+  $("joinButton").disabled=true;$("studentId").disabled=true;$("joinMessage").textContent="Entrando a la sala…";
+  const {data,error}=await supabase.rpc("bug_join_room",{p_room:room,p_student_id:studentId,p_device_id:myDeviceId});
+  $("studentId").disabled=false;
+  if(error){console.error(error);$("joinMessage").textContent="No fue posible entrar. Verifica que setup.sql esté ejecutado.";$("joinButton").disabled=!connected;return}
+  if(!data?.allowed){
+    const m={room_full:"La sala ya tiene dos jugadores.",match_in_progress:"La partida ya está en curso. Espera la siguiente.",device_already_joined:"Este navegador ya está registrado con otro ID.",id_already_joined:"Ese ID ya está registrado en esta partida."};
+    $("joinMessage").textContent=m[data?.reason]||"No fue posible entrar.";$("joinButton").disabled=!connected;return
+  }
+  player={id:data.player_id,student_id:data.student_id,slot:data.slot};matchId=data.match_id;score=data.score||0;
+  $("slotBadge").textContent=`P${player.slot}`;$("waitingTitle").textContent=`ID ${player.student_id} registrado`;$("waitingText").textContent=data.players_count===1?"Esperando al segundo jugador…":"Los dos jugadores están listos. La partida iniciará en breve.";show("waitingScreen");
+  await channel.send({type:"broadcast",event:"player_joined",payload:{match_id:matchId,player_id:player.id,student_id:player.student_id,slot:player.slot}})
+}
+$("joinForm").addEventListener("submit",async e=>{e.preventDefault();const id=$("studentId").value.trim();if(id)await joinGame(id)});
+
+function renderQuestion(q){
+  currentRound=q.round_no;answered=false;$("roundPill").textContent=`Ronda ${q.round_no}/${TOTAL_ROUNDS}`;$("categoryPill").textContent=cat(q.category);$("levelPill").textContent=`Nivel ${q.level}`;$("title").textContent=q.title;$("language").textContent=q.language;$("codeBlock").textContent=q.code;$("prompt").textContent=q.prompt;$("feedback").className="feedback";$("feedback").textContent="Selecciona una respuesta.";$("scoreMini").textContent=`${score} pts`;
+  const a=$("answers");a.innerHTML="";(q.options||[]).forEach((t,i)=>{const b=document.createElement("button");b.type="button";b.className="answer";b.dataset.option=i+1;const x=document.createElement("b");x.textContent=letter(i+1);const s=document.createElement("span");s.textContent=t;b.append(x,s);b.addEventListener("click",()=>submitAnswer(i+1,b));a.appendChild(b)});show("gameScreen");startTimer(q.ends_at)
+}
+function startTimer(endAt){if(roundInterval)clearInterval(roundInterval);const end=new Date(endAt).getTime();const tick=()=>{const r=Math.max(0,end-Date.now());$("timer").textContent=Math.ceil(r/1000);if(r<=0){clearInterval(roundInterval);roundInterval=null;document.querySelectorAll(".answer").forEach(b=>b.disabled=true);if(!answered)$("feedback").textContent="Tiempo terminado. Esperando resultado…"}};tick();roundInterval=setInterval(tick,80)}
+async function submitAnswer(option,button){
+  if(answered||!player||!matchId)return;answered=true;document.querySelectorAll(".answer").forEach(b=>b.disabled=true);button.classList.add("selected");$("feedback").textContent="Registrando respuesta…";
+  const {data,error}=await supabase.rpc("bug_submit_answer",{p_match_id:matchId,p_player_id:player.id,p_round_no:currentRound,p_selected_option:option});
+  if(error||!data?.accepted){console.error(error||data);$("feedback").className="feedback bad";$("feedback").textContent=data?.reason==="round_closed"?"La respuesta llegó después del tiempo.":"No se pudo registrar la respuesta.";return}
+  score=data.total_score||score;$("scoreMini").textContent=`${score} pts`;
+  if(data.correct){button.classList.add("correct");$("feedback").className="feedback good";$("feedback").textContent=`Correcto · +${data.points} puntos · ${data.response_ms} ms`}
+  else{button.classList.add("incorrect");$("feedback").className="feedback bad";$("feedback").textContent=`Bug no encontrado · 0 puntos · ${data.response_ms} ms`}
+  await channel.send({type:"broadcast",event:"answer_submitted",payload:{match_id:matchId,player_id:player.id,round_no:currentRound}})
+}
+function renderReveal(data){document.querySelectorAll(".answer").forEach(b=>{b.disabled=true;if(Number(b.dataset.option)===data.correct_option)b.classList.add("correct")});$("feedback").className="feedback";$("feedback").textContent=data.explanation}
+function renderGlobal(rows){const e=$("leaderboard");e.innerHTML="";if(!rows?.length){e.innerHTML='<div class="msg">Sin ranking todavía.</div>';return}rows.slice(0,5).forEach(r=>{const d=document.createElement("div");d.className="leader";const a=document.createElement("span");a.textContent=`#${r.rank}`;const b=document.createElement("span");b.textContent=`ID ${r.student_id}`;const c=document.createElement("strong");c.textContent=r.total_score;d.append(a,b,c);e.appendChild(d)})}
+function renderResults(data){if(roundInterval){clearInterval(roundInterval);roundInterval=null}const mine=(data.scores||[]).find(x=>x.player_id===player?.id);if(mine){score=mine.score;$("place").textContent=`#${mine.place}`;$("finalScore").textContent=`${mine.score} pts`;$("finalText").textContent=`${mine.correct_answers}/${TOTAL_ROUNDS} bugs encontrados correctamente`}renderGlobal(data.leaderboard||[]);show("resultsScreen")}
+$("playAgain").addEventListener("click",async()=>{if(!player)return;matchId=null;currentRound=0;answered=false;score=0;$("waitingText").textContent="Entrando a una nueva partida…";show("waitingScreen");await joinGame(player.student_id)});
+
+channel.on("broadcast",{event:"match_start"},async({payload})=>{if(!player)return;matchId=payload.match_id;show("countdownScreen");for(let n=3;n>=1;n--){$("countdownNumber").textContent=n;await new Promise(r=>setTimeout(r,900))}$("countdownNumber").textContent="GO"})
+.on("broadcast",{event:"round_start"},({payload})=>{if(player&&payload?.round_no!=null)renderQuestion(payload)})
+.on("broadcast",{event:"round_reveal"},({payload})=>{if(player&&payload?.round_no===currentRound)renderReveal(payload)})
+.on("broadcast",{event:"match_end"},({payload})=>{if(player)renderResults(payload)})
+.subscribe((status,err)=>{if(status==="SUBSCRIBED"){connected=true;setConnection("Conectado",true);$("joinButton").disabled=false;$("joinMessage").textContent="Ingresa tu ID para entrar."}else{connected=false;setConnection(status.replaceAll("_"," "));$("joinButton").disabled=true;if(err)console.error(status,err)}});
+window.addEventListener("beforeunload",()=>{if(roundInterval)clearInterval(roundInterval);supabase.removeChannel(channel)});
+</script>
+</body>
+</html>
