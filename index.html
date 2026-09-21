@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Realtime Game Test</title>
+<style>
+body{margin:0;min-height:100vh;display:grid;place-items:center;background:#08111d;color:#eef6ff;font-family:Arial,sans-serif;padding:20px}
+.wrap{width:min(100%,900px)}
+.top{display:flex;justify-content:space-between;gap:10px;align-items:center;margin-bottom:14px}
+#status{font-size:14px;color:#9fb3c8}
+#arena{position:relative;width:100%;aspect-ratio:16/9;min-height:340px;border:1px solid #29445f;border-radius:18px;overflow:hidden;background:
+linear-gradient(rgba(255,255,255,.05) 1px,transparent 1px),
+linear-gradient(90deg,rgba(255,255,255,.05) 1px,transparent 1px),#0d1b2a;background-size:40px 40px}
+#player{position:absolute;width:56px;height:56px;left:50%;top:50%;transform:translate(-50%,-50%);border-radius:14px;background:#22c1ff;box-shadow:0 0 30px rgba(34,193,255,.35);transition:left .06s linear,top .06s linear}
+.info{margin-top:14px;padding:12px;border:1px solid #21374c;border-radius:12px;background:#0b1724;font-size:14px}
+a{color:#55d0ff;overflow-wrap:anywhere}
+</style>
+</head>
+<body>
+<main class="wrap">
+  <div class="top">
+    <h1 style="margin:0;font-size:24px">Juego Realtime</h1>
+    <div id="status">Conectando...</div>
+  </div>
+
+  <div id="arena"><div id="player"></div></div>
+
+  <div class="info">
+    <div><strong>Sala:</strong> <span id="room"></span></div>
+    <div><strong>Último comando:</strong> <span id="last">Ninguno</span></div>
+    <div style="margin-top:8px"><strong>Control móvil:</strong><br><a id="controlLink"></a></div>
+  </div>
+</main>
+
+<script type="module">
+import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm";
+import { SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, DEFAULT_ROOM } from "./config.js";
+
+const params = new URLSearchParams(location.search);
+const room = params.get("room") || DEFAULT_ROOM;
+document.getElementById("room").textContent = room;
+
+const controlUrl = new URL("./control.html", location.href);
+controlUrl.searchParams.set("room", room);
+const controlLink = document.getElementById("controlLink");
+controlLink.href = controlUrl.href;
+controlLink.textContent = controlUrl.href;
+
+const player = document.getElementById("player");
+const statusEl = document.getElementById("status");
+const lastEl = document.getElementById("last");
+
+let x=50,y=50;
+const step=4;
+
+function render(){
+  player.style.left=x+"%";
+  player.style.top=y+"%";
+}
+function move(dir){
+  if(dir==="up") y=Math.max(4,y-step);
+  if(dir==="down") y=Math.min(96,y+step);
+  if(dir==="left") x=Math.max(4,x-step);
+  if(dir==="right") x=Math.min(96,x+step);
+  if(dir==="reset"){x=50;y=50}
+  lastEl.textContent=dir.toUpperCase();
+  render();
+}
+
+const supabase=createClient(SUPABASE_URL,SUPABASE_PUBLISHABLE_KEY);
+const channel=supabase
+  .channel("game:"+room,{config:{broadcast:{ack:true}}})
+  .on("broadcast",{event:"move"},({payload})=>{
+    if(payload?.direction) move(payload.direction);
+  })
+  .subscribe((status)=>{
+    statusEl.textContent = status==="SUBSCRIBED" ? "● Realtime conectado" : status;
+  });
+
+render();
+</script>
+</body>
+</html>
